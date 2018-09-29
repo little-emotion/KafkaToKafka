@@ -1,0 +1,20 @@
+#consumer config
+bootstrap.servers=192.168.35.21:9092,192.168.35.22:9092,192.168.35.23:9092,192.168.35.24:9092,192.168.35.25:9092
+group.id=KMX_TEST_COPY_DATA
+enable.auto.commit=true
+auto.commit.interval.ms=1000
+key.deserializer=org.apache.kafka.common.serialization.StringDeserializer
+value.deserializer=org.apache.kafka.common.serialization.ByteArrayDeserializer
+auto.offset.reset=earliest
+store.read.topic=TY_PP_KTP_CTY_DecodeKMX
+
+#producer config
+store.topic=Test10_PP_KTP_CTY_Source
+store.broker=192.168.35.41:9092,192.168.35.42:9092,192.168.35.43:9092
+store.acks=all
+store.retries=0
+store.batch=16384
+store.linger.ms=1
+store.buffer=33554432
+store.keySerial=org.apache.kafka.common.serialization.StringSerializer
+store.time=10
