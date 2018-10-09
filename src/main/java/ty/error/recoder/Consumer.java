@@ -2,6 +2,7 @@ package ty.error.recoder;
 
 import java.util.*;
 
+import com.sagittarius.bean.common.ValueType;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
@@ -10,6 +11,8 @@ import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.clients.producer.RecordMetadata;
 import ty.pub.TransPacket;
+
+import static com.sagittarius.bean.common.ValueType.*;
 
 public class Consumer extends Thread{
 
@@ -24,6 +27,7 @@ public class Consumer extends Thread{
 	Long ponitCount;
 	long packageCount;
 	long totalTime;
+	long errorCount;
 	public Consumer(Properties p)
 	{
 		props=p;
@@ -51,7 +55,7 @@ public class Consumer extends Thread{
 		ponitCount = 0l;
 		packageCount =0;
 		totalTime = 0l;
-
+		errorCount = 0l;
 	}
 	
 	public void run()
@@ -69,25 +73,14 @@ public class Consumer extends Thread{
 
 			for (ConsumerRecord<String, byte[]> record : records){
 				packageCount++;
-				//System.out.println(Thread.currentThread().getName()+" -"+i+" :"+record.toString()+" pavkage = " +packageCount);
 				try{
 					result = KryoUtil.deserialize(record.value(), TransPacket.class);
+
 					ponitCount+=getPoint(result);
 				}catch (Exception e){
 					e.printStackTrace();
 				}
-				producer.send(new ProducerRecord<String, byte[]>(topic,record.value()), new Callback(){
-					public void onCompletion(RecordMetadata arg0, Exception arg1) {
-						// TODO Auto-generated method stub
-						if(arg1 != null){
-							producer.send(new ProducerRecord<String, byte[]>(topic, KryoUtil.serialize2byte(result)));
-						}
-						else{
-//							System.out.println("success");
-						}
-					}
 
-				});
 					
 			}//for
 			totalTime = (System.currentTimeMillis()-startTime);
@@ -108,17 +101,70 @@ public class Consumer extends Thread{
 		Iterator<?> iterator = packet.getBaseInfoMapIter();
 
 		while (iterator.hasNext()) {
-			iterator.next();
+			Map.Entry<String, String> entry = (Map.Entry<String, String>) iterator.next();
+			updateErrorPoint(entry.getKey(),entry.getValue());
 			pointCount++;
 		}
 		//工况参数
 		iterator = packet.getWorkStatusMapIter();
 		while (iterator.hasNext()) {
-			iterator.next();
+			TransPacket.WorkStatusRecord entry = (TransPacket.WorkStatusRecord) iterator.next();
+			updateErrorPoint(entry.getWorkStatusId(), entry.getValue());
 			pointCount++;
 		}
 		return pointCount;
 	}
+
+	private void updateErrorPoint(String name, String value) {
+		ValueType type = MetaDataMap.get(name);
+		if(value == null || value.contains("null")){
+			errorCount++;
+			return;
+		}
+		switch(type){
+			case INT:
+				try{
+					Integer.parseInt(value);
+				} catch (Exception e){
+					errorCount++;
+					System.out.println(" Error point (INT):"+name+" ,value:"+value);
+				}
+				break;
+			case LONG:
+				try{
+					Long.parseLong(value);
+				} catch (Exception e){
+					errorCount++;
+					System.out.println(" Error point (LONG):"+name+" ,value:"+value);
+				}
+				break;
+			case FLOAT:
+				try{
+					Float.parseFloat(value);
+				} catch (Exception e){
+					errorCount++;
+					System.out.println(" Error point (FLOAT):"+name+" ,value:"+value);
+				}
+				break;
+			case DOUBLE:
+				try{
+					Double.parseDouble(value);
+				} catch (Exception e){
+					errorCount++;
+					System.out.println(" Error point (DOUBLE):"+name+" ,value:"+value);
+				}
+				break;
+			case BOOLEAN:
+				try{
+					Boolean.parseBoolean(value);
+				} catch (Exception e){
+					errorCount++;
+					System.out.println(" Error point (BOOLEAN):"+name+" ,value:"+value);
+				}
+				break;
+		}
+	}
+
 
 	public Long getPonitCount() {
 		return ponitCount;
@@ -130,6 +176,10 @@ public class Consumer extends Thread{
 
 	public long getTotalTime() {
 		return totalTime;
+	}
+
+	public long getErrorCount() {
+		return errorCount;
 	}
 }
 

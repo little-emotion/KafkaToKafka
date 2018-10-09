@@ -29,6 +29,10 @@ public class Launcher {
 		props.load(in);
 		in.close();
 
+		String mataDataPath = props.getProperty("metric.dir");
+		Importer importer = new Importer(mataDataPath);
+		importer.register();
+
 		final ArrayList<Consumer> consumers = new ArrayList<Consumer>();
 		ExecutorService executorService = Executors.newFixedThreadPool(50);
 		for(int i = 0;i<50;i++){
@@ -37,22 +41,34 @@ public class Launcher {
 			executorService.submit(consumer);
 		}
 
-		new Timer("timer - stop").schedule(new TimerTask() {
+		new Timer("timer - statistic").schedule(new TimerTask() {
 			@Override
 			public void run() {
 				long totalPackage = 0;
 				long totalPoint = 0;
 				long totalTime = 0;
+				long totalError = 0;
 				for(int i= 0;i<50;i++){
 					long tmpPointCount = consumers.get(i).getPonitCount();
 					long tmpPackageCount = consumers.get(i).getPackageCount();
+					long tmpErrorCount = consumers.get(i).getErrorCount();
 					totalPoint+=tmpPointCount;
 					totalPackage+=tmpPackageCount;
+					totalError+=tmpErrorCount;
 					totalTime = totalTime>consumers.get(i).getTotalTime()?totalTime:consumers.get(i).getTotalTime();
 				}
-				System.out.println("Total: total package = "+totalPackage+", total point = "+totalPoint+", total time = "+ totalTime);
-				notEnd=false;
+				System.out.println("Total: total package = "+totalPackage+", total point = "+totalPoint+", total error = "+totalError+", total time = "+ totalTime);
+
 			}
-		}, 1000*60*(60+20));
+		}, 1000*60, 1000*60*(1));
+
+		new Timer("timeer - stop").schedule(new TimerTask() {
+			@Override
+			public void run() {
+				notEnd = false;
+				System.out.println("end！！！");
+
+			}
+		}, 1000*60*50);
 	}
 }

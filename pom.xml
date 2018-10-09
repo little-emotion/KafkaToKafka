@@ -107,6 +107,11 @@
 			<groupId>ty</groupId>
 			<artifactId>pub-interface</artifactId>
 			<version>3</version>
-		</dependency> 
+		</dependency>
+	  <dependency>
+		  <groupId>tsinghua.thss</groupId>
+		  <artifactId>kmx-sdk</artifactId>
+		  <version>1.0-SNAPSHOT</version>
+	  </dependency>
   </dependencies>
 </project>
