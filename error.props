@@ -1,6 +1,6 @@
 #consumer config
 bootstrap.servers=192.168.35.21:9092,192.168.35.22:9092,192.168.35.23:9092,192.168.35.24:9092,192.168.35.25:9092
-group.id=read-su
+group.id=read-statistics-error-count
 enable.auto.commit=true
 auto.commit.interval.ms=1000
 key.deserializer=org.apache.kafka.common.serialization.StringDeserializer
