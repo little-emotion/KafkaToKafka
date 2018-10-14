@@ -16,6 +16,12 @@ import edu.thss.monitor.rsc.service.push.PushResult;
 public class Launcher {
 
 	public static volatile Boolean notEnd = true;
+
+	/**
+	 * 参数0 配置文件
+	 * 参数1 写入topic
+	 * 参数2 第几次loop
+	 * */
 	public static void main(String[] args) throws IOException {
 		// 默认配置位置
 		String path = "error.props";
@@ -29,6 +35,13 @@ public class Launcher {
 		props.load(in);
 		in.close();
 
+
+		String writeTopic=args[1];
+		String writeNum=args[2];
+		props.setProperty("store.topic", writeTopic);
+		props.setProperty("offset", writeNum);
+
+		props.setProperty("group.id",writeTopic+"_"+writeNum);
 		final ArrayList<Consumer> consumers = new ArrayList<Consumer>();
 		ExecutorService executorService = Executors.newFixedThreadPool(50);
 		for(int i = 0;i<50;i++){
@@ -53,6 +66,6 @@ public class Launcher {
 				System.out.println("Total: total package = "+totalPackage+", total point = "+totalPoint+", total time = "+ totalTime);
 				notEnd=false;
 			}
-		}, 1000*60*(60+20));
+		}, 1000*60*(25));
 	}
 }

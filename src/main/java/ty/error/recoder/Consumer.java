@@ -24,6 +24,10 @@ public class Consumer extends Thread{
 	Long ponitCount;
 	long packageCount;
 	long totalTime;
+
+	long timeoffset;
+	final long FIX = 100000000;
+
 	public Consumer(Properties p)
 	{
 		props=p;
@@ -47,6 +51,10 @@ public class Consumer extends Thread{
 
 		topic=props.getProperty("store.topic");
 		timeInterval=Long.parseLong(props.getProperty("store.time"));
+
+		int tmp = Integer.parseInt(props.getProperty("offset"));
+		timeoffset = FIX*tmp;
+
 
 		ponitCount = 0l;
 		packageCount =0;
@@ -80,6 +88,7 @@ public class Consumer extends Thread{
 					public void onCompletion(RecordMetadata arg0, Exception arg1) {
 						// TODO Auto-generated method stub
 						if(arg1 != null){
+							result.setTimestamp(result.getTimestamp()+ timeoffset);
 							producer.send(new ProducerRecord<String, byte[]>(topic, KryoUtil.serialize2byte(result)));
 						}
 						else{
